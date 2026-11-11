@@ -31,6 +31,11 @@ public interface SubjectService {
 
     Long createStage(Long subjectId, StageSaveRequest request);
 
+    /**
+     * 题目导入等场景使用：按学科+阶段名查找，不存在时自动创建（启用状态）。
+     */
+    Long ensureStage(Long subjectId, String stageName);
+
     void updateStage(Long subjectId, Long stageId, StageSaveRequest request);
 
     /** 按 orderedIds 顺序重写指定学科下全部阶段的 sort_order。 */

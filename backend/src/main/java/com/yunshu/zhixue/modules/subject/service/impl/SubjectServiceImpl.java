@@ -191,6 +191,43 @@ public class SubjectServiceImpl implements SubjectService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long ensureStage(Long subjectId, String stageName) {
+        Subject subject = requireSubject(subjectId);
+        String name = stageName == null ? "" : stageName.trim();
+        if (name.isEmpty() || name.length() > 50) {
+            throw BizException.of(ErrorCode.PARAM_INVALID, "阶段名称需为 1~50 个字符");
+        }
+        Stage existing = stageMapper.selectOne(Wrappers.<Stage>lambdaQuery()
+                .eq(Stage::getSubjectId, subjectId)
+                .eq(Stage::getName, name)
+                .last("LIMIT 1"));
+        if (existing != null) {
+            return existing.getId();
+        }
+        Stage stage = new Stage();
+        stage.setSubjectId(subjectId);
+        stage.setName(name);
+        stage.setIcon(null);
+        stage.setSortOrder(nextStageSort(subjectId));
+        stage.setStatus(1);
+        try {
+            stageMapper.insert(stage);
+            return stage.getId();
+        } catch (DuplicateKeyException ex) {
+            Stage concurrent = stageMapper.selectOne(Wrappers.<Stage>lambdaQuery()
+                    .eq(Stage::getSubjectId, subjectId)
+                    .eq(Stage::getName, name)
+                    .last("LIMIT 1"));
+            if (concurrent != null) {
+                return concurrent.getId();
+            }
+            throw BizException.of(ErrorCode.DUPLICATE_NAME,
+                    "学科「" + subject.getName() + "」下阶段名称已存在");
+        }
+    }
+
+    @Override
     public void updateStage(Long subjectId, Long stageId, StageSaveRequest request) {
         Stage stage = requireStage(subjectId, stageId);
         String name = request.name().trim();
