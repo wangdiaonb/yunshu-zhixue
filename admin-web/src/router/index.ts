@@ -16,6 +16,8 @@ const routes: RouteRecordRaw[] = [
     redirect: '/dashboard',
     children: [
       ...adminRoutes,
+      // 兼容旧书签/旧页面地址
+      { path: 'subjects', redirect: '/content/subjects' },
       {
         path: '403',
         name: 'forbidden',

@@ -10,6 +10,21 @@ import App from './App.vue'
 import router from './router'
 import { permissionDirective } from './directives/permission'
 
+// 开发环境清理历史遗留的 Service Worker / CacheStorage，避免旧页面被长期缓存
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+    .catch(() => undefined)
+}
+
+if (import.meta.env.DEV && 'caches' in window) {
+  caches
+    .keys()
+    .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+    .catch(() => undefined)
+}
+
 const app = createApp(App)
 
 for (const [name, component] of Object.entries(ElementPlusIconsVue)) {
