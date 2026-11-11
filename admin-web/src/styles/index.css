@@ -1,0 +1,50 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ys-text-primary);
+  background: var(--ys-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--ys-primary);
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+.brand-mark {
+  display: block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  background: var(--ys-mark-gradient);
+  -webkit-mask: var(--ys-brand-mark) center / contain no-repeat;
+  mask: var(--ys-brand-mark) center / contain no-repeat;
+}
+
+.text-muted {
+  color: var(--ys-text-secondary);
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

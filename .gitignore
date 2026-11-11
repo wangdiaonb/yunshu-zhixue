@@ -1,0 +1,15 @@
+# 依赖与构建产物
+**/node_modules/
+**/dist/
+**/target/
+**/*.log
+
+# 环境变量（含口令）
+**/.env
+**/.env.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store

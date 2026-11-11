@@ -1,0 +1,44 @@
+/* 云枢智学管理端变量：暗色侧边栏 + 品牌渐变，对齐 prototype/css/admin.css */
+:root {
+  --ys-primary: #409eff;
+  --ys-primary-dark: #337ecc;
+  --ys-success: #67c23a;
+  --ys-warning: #e6a23c;
+  --ys-danger: #f56c6c;
+  --ys-info: #909399;
+
+  --ys-bg: #f5f7fa;
+  --ys-sidebar: #1d1e2c;
+  --ys-sidebar-width: 240px;
+  --ys-sidebar-collapsed-width: 64px;
+  --ys-header-height: 64px;
+
+  --ys-text-primary: #303133;
+  --ys-text-regular: #606266;
+  --ys-text-secondary: #909399;
+  --ys-border: #dcdfe6;
+  --ys-border-light: #e4e7ed;
+
+  --ys-radius-sm: 4px;
+  --ys-radius-md: 8px;
+  --ys-radius-lg: 12px;
+  --ys-radius-round: 20px;
+
+  --ys-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --ys-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --ys-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  --ys-brand-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --ys-mark-gradient: linear-gradient(135deg, #8ea2ff 0%, #c9a6ff 100%);
+  --ys-brand-mark: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%3E%3Cpath%20fill='%23fff'%20d='M13.05,3.55C14.79,11.21,14.79,11.21,22.45,12.95C14.79,14.69,14.79,14.69,13.05,22.35C11.31,14.69,11.31,14.69,3.65,12.95C11.31,11.21,11.31,11.21,13.05,3.55Z'/%3E%3Cpath%20fill='%23fff'%20fill-opacity='.72'%20d='M5.65,1.65C6.41,4.99,6.41,4.99,9.75,5.75C6.41,6.51,6.41,6.51,5.65,9.85C4.89,6.51,4.89,6.51,1.55,5.75C4.89,4.99,4.99,4.99,5.65,1.65Z'/%3E%3C/svg%3E");
+
+  --el-color-primary: #409eff;
+  --el-color-primary-light-3: #79bbff;
+  --el-color-primary-light-5: #a0cfff;
+  --el-color-primary-light-7: #c6e2ff;
+  --el-color-primary-light-8: #d9ecff;
+  --el-color-primary-light-9: #ecf5ff;
+  --el-color-primary-dark-2: #337ecc;
+  --el-border-radius-base: 8px;
+  --el-font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}

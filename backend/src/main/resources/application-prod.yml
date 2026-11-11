@@ -1,0 +1,55 @@
+# 生产环境：连接信息与密钥全部来自环境变量，缺失即启动失败
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: yszx-hikari
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DATABASE:0}
+      timeout: 3s
+      lettuce:
+        pool:
+          max-active: 32
+          max-idle: 16
+          min-idle: 4
+          max-wait: 2s
+
+# 生产不暴露在线文档；契约由 CI 在开发/预发环境导出 openapi.json（D21）
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+app:
+  jwt:
+    portal:
+      secret: ${JWT_PORTAL_SECRET}
+    admin:
+      secret: ${JWT_ADMIN_SECRET}
+  # 生产必须显式配置默认密码，缺失时内置管理员保持待初始化状态，避免使用公开默认值
+  default-password: ${APP_DEFAULT_PASSWORD:}
+  storage:
+    endpoint: ${MINIO_ENDPOINT}
+    public-endpoint: ${MINIO_PUBLIC_ENDPOINT:/files}
+    access-key: ${MINIO_ACCESS_KEY}
+    secret-key: ${MINIO_SECRET_KEY}
+
+logging:
+  level:
+    root: warn
+    com.yunshu.zhixue: info
+  file:
+    name: ${LOG_FILE:logs/yunshu-zhixue.log}
