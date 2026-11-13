@@ -17,4 +17,7 @@ public interface StudyStatService {
      * @return 仅有刷题记录的学员条目，调用方按 studentId 兜底默认值
      */
     List<PracticeStat> statByStudents(Collection<Long> studentIds);
+
+    /** 学员错题本中未删除的题目数量（个人中心统计）。 */
+    long countWrongQuestions(Long studentId);
 }

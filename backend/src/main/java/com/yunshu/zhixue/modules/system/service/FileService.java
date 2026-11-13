@@ -8,5 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface FileService {
 
+    /** 管理端图片（Logo / 默认头像）：等比缩放至最长边 512px（A-F01）。 */
     FileUploadResponse uploadImage(MultipartFile file);
+
+    /** 学员头像：居中裁剪为 200×200（P-M05）。 */
+    FileUploadResponse uploadAvatar(MultipartFile file);
 }

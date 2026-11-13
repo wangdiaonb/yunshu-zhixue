@@ -11,8 +11,10 @@ import type {
 } from '@/types/auth'
 import { getRefreshToken } from '@/utils/token'
 
-/** P-A01 发送短信验证码 */
-export function sendSmsCode(payload: SmsCodePayload): Promise<{ expireSeconds: number }> {
+/** P-A01 发送短信验证码（debugCode 仅开发环境返回） */
+export function sendSmsCode(
+  payload: SmsCodePayload
+): Promise<{ expireSeconds: number; debugCode?: string | null }> {
   return http.post('/auth/sms-code', payload)
 }
 

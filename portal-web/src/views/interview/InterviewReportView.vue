@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import PageShell from '@/components/PageShell.vue'
-
-const route = useRoute()
+import PortalPlaceholder from '@/components/PortalPlaceholder.vue'
 </script>
 
 <template>
-  <PageShell
+  <PortalPlaceholder
     title="面试报告"
-    :description="`面试记录 ID：${route.params.id}；展示综合评分、六维能力雷达与逐题评语，报告仅在线查看。`"
+    icon="📊"
+    description="综合评分、六维能力分析与逐题点评，帮助你明确下一步的补强方向。"
+    :features="['综合评分与趋势', '六维能力分析', '优点与待提升项', '改进建议与推荐练习']"
   />
 </template>

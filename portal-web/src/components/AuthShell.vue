@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { useSiteStore } from '@/store/site'
+
 withDefaults(
   defineProps<{
     title: string
@@ -8,6 +11,17 @@ withDefaults(
   {
     subtitle: '',
     width: '440px'
+  }
+)
+
+const siteStore = useSiteStore()
+const logoBroken = ref(false)
+const showLogo = computed(() => Boolean(siteStore.logoUrl) && !logoBroken.value)
+
+watch(
+  () => siteStore.logoUrl,
+  () => {
+    logoBroken.value = false
   }
 )
 </script>
@@ -21,8 +35,15 @@ withDefaults(
 
     <div class="auth-body">
       <router-link to="/" class="auth-brand">
-        <span class="brand-mark" aria-hidden="true" />
-        <span>云枢智学</span>
+        <img
+          v-if="showLogo"
+          :src="siteStore.logoUrl"
+          :alt="siteStore.siteName"
+          class="auth-logo"
+          @error="logoBroken = true"
+        />
+        <span v-else class="brand-mark" aria-hidden="true" />
+        <span>{{ siteStore.siteName }}</span>
       </router-link>
 
       <section class="auth-card" :style="{ maxWidth: width }">
@@ -95,6 +116,14 @@ withDefaults(
 
 .auth-brand .brand-mark {
   font-size: 30px;
+}
+
+.auth-logo {
+  display: block;
+  width: auto;
+  max-width: 160px;
+  height: 34px;
+  object-fit: contain;
 }
 
 .auth-card {

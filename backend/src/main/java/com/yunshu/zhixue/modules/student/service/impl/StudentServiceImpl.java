@@ -50,6 +50,46 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public StudentAccount findAccountByMobile(String mobile) {
+        if (!StringUtils.hasText(mobile)) {
+            return null;
+        }
+        Student student = studentMapper.selectOne(Wrappers.<Student>lambdaQuery()
+                .eq(Student::getMobile, mobile.trim())
+                .last("LIMIT 1"));
+        return toAccount(student);
+    }
+
+    @Override
+    public boolean existsByMobile(String mobile) {
+        if (!StringUtils.hasText(mobile)) {
+            return false;
+        }
+        return studentMapper.selectCount(Wrappers.<Student>lambdaQuery()
+                .eq(Student::getMobile, mobile.trim())) > 0;
+    }
+
+    @Override
+    public StudentAccount createStudent(String mobile, String passwordHash, String nickname) {
+        Student student = new Student();
+        student.setMobile(mobile.trim());
+        student.setPasswordHash(passwordHash);
+        student.setNickname(nickname);
+        student.setGender(0);
+        student.setGuideFinished(0);
+        student.setStatus(1);
+        studentMapper.insert(student);
+        return toAccount(student);
+    }
+
+    @Override
+    public void updatePasswordHash(Long studentId, String passwordHash) {
+        studentMapper.update(null, Wrappers.<Student>lambdaUpdate()
+                .eq(Student::getId, studentId)
+                .set(Student::getPasswordHash, passwordHash));
+    }
+
+    @Override
     public StudentSummary getSummary(Long studentId) {
         Student student = studentMapper.selectById(studentId);
         return student == null ? null

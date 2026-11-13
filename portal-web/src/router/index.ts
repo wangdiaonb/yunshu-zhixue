@@ -111,9 +111,6 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const appTitle = import.meta.env.VITE_APP_TITLE
-  document.title = to.meta.title ? `${to.meta.title} - ${appTitle}` : appTitle
-
   const userStore = useUserStore()
   if (!to.meta.public && !userStore.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }

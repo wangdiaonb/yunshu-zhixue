@@ -4,12 +4,14 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import AuthShell from '@/components/AuthShell.vue'
 import { sendSmsCode } from '@/api/auth'
+import { useSiteStore } from '@/store/site'
 import { useUserStore } from '@/store/user'
 import { useCountdown } from '@/composables/useCountdown'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const siteStore = useSiteStore()
 const { remaining, start } = useCountdown(60)
 
 const activeTab = ref<'password' | 'sms'>('password')
@@ -80,14 +82,19 @@ async function handleSendCode(): Promise<void> {
     return
   }
   await form.validateField('mobile')
-  await sendSmsCode({ mobile: smsForm.mobile, type: 'login' })
-  ElMessage.success('验证码已发送')
+  const result = await sendSmsCode({ mobile: smsForm.mobile, type: 'login' })
   start()
+  if (result.debugCode) {
+    smsForm.code = result.debugCode
+    ElMessage.success(`验证码已发送，开发环境已自动填入：${result.debugCode}`)
+    return
+  }
+  ElMessage.success('验证码已发送')
 }
 </script>
 
 <template>
-  <AuthShell title="登录云枢智学" subtitle="登录后可刷题、记录错题、发起 AI 模拟面试">
+  <AuthShell :title="`登录${siteStore.siteName}`" subtitle="登录后可刷题、记录错题、发起 AI 模拟面试">
     <el-tabs v-model="activeTab" stretch>
       <el-tab-pane label="密码登录" name="password">
         <el-form

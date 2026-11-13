@@ -58,10 +58,15 @@ export const useUserStore = defineStore('user', () => {
 
   async function fetchProfile(): Promise<PortalProfile> {
     const data = await getProfile()
+    applyProfile(data)
+    return data
+  }
+
+  /** 资料保存 / 头像更新后同步全局缓存 */
+  function applyProfile(data: PortalProfile): void {
     profile.value = data
     user.value = { id: data.id, nickname: data.nickname, avatar: data.avatar }
     profileLoaded.value = true
-    return data
   }
 
   async function logout(): Promise<void> {
@@ -100,6 +105,7 @@ export const useUserStore = defineStore('user', () => {
     registerAccount,
     bootstrap,
     fetchProfile,
+    applyProfile,
     logout,
     reset,
     updateCachedUser

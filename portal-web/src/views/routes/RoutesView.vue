@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import PageShell from '@/components/PageShell.vue'
+import PortalPlaceholder from '@/components/PortalPlaceholder.vue'
 </script>
 
 <template>
-  <PageShell
+  <PortalPlaceholder
     title="学习路线"
-    description="按路线顺序逐课学习，完成课程后勾选标记，进度实时保存。"
+    icon="🗺️"
+    description="按学科方向跟学 B 站精选课程，从入门到就业体系化进阶。"
+    :features="['学科路线切换', '课程按序学习', 'B 站视频直达', '学习进度勾选']"
   />
 </template>

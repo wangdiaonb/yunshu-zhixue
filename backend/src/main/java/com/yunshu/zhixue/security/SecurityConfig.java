@@ -63,8 +63,9 @@ public class SecurityConfig {
         applyCommon(http, jwtTokenService, tokenBlacklistService, entryPoint, accessDeniedHandler);
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // 登录/注册/找回密码/第三方登录为公开接口，其余学员端接口需登录
+                // 登录/注册/找回密码/第三方登录与站点品牌信息为公开接口，其余学员端接口需登录
                 .requestMatchers(AppConstants.PORTAL_API_PREFIX + "/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, AppConstants.PORTAL_API_PREFIX + "/site/settings").permitAll()
                 .anyRequest().authenticated());
         return http.build();
     }

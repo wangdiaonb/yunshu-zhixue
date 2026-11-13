@@ -20,6 +20,18 @@ public interface StudentService {
     /** 按主键查询账号，供刷新令牌时校验账号状态。 */
     StudentAccount findAccountById(Long studentId);
 
+    /** 按手机号查询账号（验证码登录 / 找回密码使用）。 */
+    StudentAccount findAccountByMobile(String mobile);
+
+    /** 手机号是否已注册（注册与找回密码前置校验）。 */
+    boolean existsByMobile(String mobile);
+
+    /** 创建学员账号，返回新账号（id 已回填）。 */
+    StudentAccount createStudent(String mobile, String passwordHash, String nickname);
+
+    /** 更新密码哈希（找回密码使用）。 */
+    void updatePasswordHash(Long studentId, String passwordHash);
+
     /** 登录返回所需的学员摘要。 */
     StudentSummary getSummary(Long studentId);
 

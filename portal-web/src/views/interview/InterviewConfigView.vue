@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import PageShell from '@/components/PageShell.vue'
+import PortalPlaceholder from '@/components/PortalPlaceholder.vue'
 </script>
 
 <template>
-  <PageShell
+  <PortalPlaceholder
     title="AI 模拟面试"
-    description="选择学科方向、难度与题量发起面试；每日 5 次配额，按 Asia/Shanghai 自然日 0 点重置。"
+    icon="🤖"
+    description="选择技术方向、面试难度与题目数量，开启一场接近真实的 AI 模拟面试。"
+    :features="['八大技术方向', '难度与题量配置', '每日面试配额', '逐题作答与实时评分']"
   />
 </template>

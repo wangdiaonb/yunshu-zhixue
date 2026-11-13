@@ -55,9 +55,14 @@ async function handleSendCode(): Promise<void> {
     return
   }
   await formInstance.validateField('mobile')
-  await sendSmsCode({ mobile: verifyForm.mobile, type: 'reset' })
-  ElMessage.success('验证码已发送')
+  const result = await sendSmsCode({ mobile: verifyForm.mobile, type: 'reset' })
   start()
+  if (result.debugCode) {
+    verifyForm.code = result.debugCode
+    ElMessage.success(`验证码已发送，开发环境已自动填入：${result.debugCode}`)
+    return
+  }
+  ElMessage.success('验证码已发送')
 }
 
 async function handleVerify(): Promise<void> {

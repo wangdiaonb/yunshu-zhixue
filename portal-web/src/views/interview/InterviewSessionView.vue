@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import PageShell from '@/components/PageShell.vue'
+import PortalPlaceholder from '@/components/PortalPlaceholder.vue'
 </script>
 
 <template>
-  <PageShell
+  <PortalPlaceholder
     title="面试进行中"
-    description="逐题作答，服务端通过 SSE 推送「分析中 → 评分中 → 思考中」与流式反馈；支持浏览器语音识别，不支持时降级为文字作答。"
+    icon="🎙️"
+    description="逐题作答，AI 面试官实时评分并给出反馈，支持文字与语音两种作答方式。"
+    :features="['对话式面试', '逐题评分与点评', '语音作答 / 朗读', '面试进度与用时统计']"
   />
 </template>

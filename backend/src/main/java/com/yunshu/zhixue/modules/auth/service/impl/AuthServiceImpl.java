@@ -6,10 +6,20 @@ import com.yunshu.zhixue.common.exception.ErrorCode;
 import com.yunshu.zhixue.modules.auth.dto.AccountPasswordLoginRequest;
 import com.yunshu.zhixue.modules.auth.dto.AdminLoginResponse;
 import com.yunshu.zhixue.modules.auth.dto.PortalLoginResponse;
+import com.yunshu.zhixue.modules.auth.dto.RegisterRequest;
+import com.yunshu.zhixue.modules.auth.dto.ResetPasswordRequest;
+import com.yunshu.zhixue.modules.auth.dto.ResetVerifyRequest;
+import com.yunshu.zhixue.modules.auth.dto.ResetVerifyResponse;
+import com.yunshu.zhixue.modules.auth.dto.SmsCodeRequest;
+import com.yunshu.zhixue.modules.auth.dto.SmsCodeResponse;
+import com.yunshu.zhixue.modules.auth.dto.SmsLoginRequest;
 import com.yunshu.zhixue.modules.auth.dto.TokenPairResponse;
 import com.yunshu.zhixue.modules.auth.service.AuthService;
 import com.yunshu.zhixue.modules.auth.support.LoginAttemptGuard;
+import com.yunshu.zhixue.modules.auth.support.PasswordResetTokenStore;
 import com.yunshu.zhixue.modules.auth.support.RefreshTokenStore;
+import com.yunshu.zhixue.modules.auth.support.SmsCodeDelivery;
+import com.yunshu.zhixue.modules.auth.support.SmsCodeStore;
 import com.yunshu.zhixue.modules.student.dto.StudentAccount;
 import com.yunshu.zhixue.modules.student.dto.StudentSummary;
 import com.yunshu.zhixue.modules.student.service.StudentService;
@@ -25,6 +35,8 @@ import com.yunshu.zhixue.support.log.OperationLogCommand;
 import com.yunshu.zhixue.support.log.OperationLogRecorder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -48,8 +60,14 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenService jwtTokenService;
     private final RefreshTokenStore refreshTokenStore;
     private final LoginAttemptGuard loginAttemptGuard;
+    private final SmsCodeStore smsCodeStore;
+    private final PasswordResetTokenStore passwordResetTokenStore;
     private final TokenBlacklistService tokenBlacklistService;
     private final OperationLogRecorder operationLogRecorder;
+
+    /** 开发环境回显验证码；生产环境为 false，不通过接口返回验证码 */
+    @Value("${app.sms.log-code:false}")
+    private boolean exposeSmsCode;
 
     @Override
     public PortalLoginResponse loginPortal(AccountPasswordLoginRequest request) {
@@ -71,6 +89,98 @@ public class AuthServiceImpl implements AuthService {
         TokenPairResponse tokens = issue(TokenAudience.PORTAL, student.id(), student.mobile());
         StudentSummary summary = new StudentSummary(student.id(), student.nickname(), student.avatar());
         return new PortalLoginResponse(tokens.accessToken(), tokens.refreshToken(), summary);
+    }
+
+    @Override
+    public SmsCodeResponse sendSmsCode(SmsCodeRequest request) {
+        String mobile = normalizeMobile(request.mobile());
+        switch (request.type()) {
+            case "register" -> {
+                if (studentService.existsByMobile(mobile)) {
+                    throw BizException.of(ErrorCode.CONTACT_OCCUPIED, "该手机号已注册，请直接登录");
+                }
+            }
+            case "reset" -> {
+                if (!studentService.existsByMobile(mobile)) {
+                    throw BizException.of(ErrorCode.NOT_FOUND, "该手机号尚未注册");
+                }
+            }
+            case "login" -> {
+                // 验证码登录不校验注册态，登录时再给出统一提示，避免账号枚举
+            }
+            default -> throw BizException.of(ErrorCode.PARAM_INVALID, "验证码用途不正确");
+        }
+        SmsCodeDelivery delivery = smsCodeStore.send(request.type(), mobile);
+        return new SmsCodeResponse(
+                delivery.expireSeconds(),
+                exposeSmsCode ? delivery.code() : null);
+    }
+
+    @Override
+    public PortalLoginResponse register(RegisterRequest request) {
+        String mobile = normalizeMobile(request.mobile());
+        if (studentService.existsByMobile(mobile)) {
+            throw BizException.of(ErrorCode.CONTACT_OCCUPIED, "该手机号已注册，请直接登录");
+        }
+        smsCodeStore.verify("register", mobile, request.code().trim());
+
+        String nickname = "用户" + mobile.substring(mobile.length() - 4);
+        StudentAccount student;
+        try {
+            student = studentService.createStudent(mobile, passwordEncoder.encode(request.password()), nickname);
+        } catch (DuplicateKeyException ex) {
+            throw BizException.of(ErrorCode.CONTACT_OCCUPIED, "该手机号已注册，请直接登录");
+        }
+        if (student == null) {
+            throw BizException.of(ErrorCode.INTERNAL_ERROR, "注册失败，请稍后重试");
+        }
+
+        loginAttemptGuard.clear(TokenAudience.PORTAL, mobile);
+        studentService.recordLogin(student.id());
+        TokenPairResponse tokens = issue(TokenAudience.PORTAL, student.id(), student.mobile());
+        StudentSummary summary = new StudentSummary(student.id(), student.nickname(), student.avatar());
+        return new PortalLoginResponse(tokens.accessToken(), tokens.refreshToken(), summary);
+    }
+
+    @Override
+    public PortalLoginResponse loginPortalBySms(SmsLoginRequest request) {
+        String mobile = normalizeMobile(request.mobile());
+        smsCodeStore.verify("login", mobile, request.code().trim());
+
+        StudentAccount student = studentService.findAccountByMobile(mobile);
+        if (student == null) {
+            throw BizException.of(ErrorCode.BAD_CREDENTIALS, "该手机号尚未注册，请先注册");
+        }
+        if (!student.isEnabled()) {
+            throw BizException.of(ErrorCode.ACCOUNT_DISABLED);
+        }
+
+        loginAttemptGuard.clear(TokenAudience.PORTAL, mobile);
+        studentService.recordLogin(student.id());
+        TokenPairResponse tokens = issue(TokenAudience.PORTAL, student.id(), student.mobile());
+        StudentSummary summary = new StudentSummary(student.id(), student.nickname(), student.avatar());
+        return new PortalLoginResponse(tokens.accessToken(), tokens.refreshToken(), summary);
+    }
+
+    @Override
+    public ResetVerifyResponse verifyResetCode(ResetVerifyRequest request) {
+        String mobile = normalizeMobile(request.mobile());
+        if (!studentService.existsByMobile(mobile)) {
+            throw BizException.of(ErrorCode.NOT_FOUND, "该手机号尚未注册");
+        }
+        smsCodeStore.verify("reset", mobile, request.code().trim());
+
+        StudentAccount student = studentService.findAccountByMobile(mobile);
+        if (student == null) {
+            throw BizException.of(ErrorCode.NOT_FOUND, "该手机号尚未注册");
+        }
+        return new ResetVerifyResponse(passwordResetTokenStore.issue(student.id()));
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        Long studentId = passwordResetTokenStore.consume(request.resetToken());
+        studentService.updatePasswordHash(studentId, passwordEncoder.encode(request.newPassword()));
     }
 
     @Override
@@ -190,5 +300,9 @@ public class AuthServiceImpl implements AuthService {
 
     private String normalize(String account) {
         return account == null ? "" : account.trim();
+    }
+
+    private String normalizeMobile(String mobile) {
+        return mobile == null ? "" : mobile.trim();
     }
 }

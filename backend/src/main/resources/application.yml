@@ -69,6 +69,9 @@ app:
       refresh-ttl: 14d
   # 后台新增用户的默认密码（Q9：走应用配置，不改 system_setting）
   default-password: ${APP_DEFAULT_PASSWORD:Yszx@123456}
+  # 短信验证码：本地开发打印到日志便于自测；生产默认关闭，接入短信平台后替换发送实现
+  sms:
+    log-code: ${SMS_LOG_CODE:false}
   # AI 能力层（仅境内调用；密钥只走环境变量，不落库）
   ai:
     base-url: ${AI_BASE_URL:https://api.deepseek.com}

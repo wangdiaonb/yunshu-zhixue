@@ -1,24 +1,48 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import AuthShell from '@/components/AuthShell.vue'
 import { sendSmsCode } from '@/api/auth'
+import { useSiteStore } from '@/store/site'
 import { useUserStore } from '@/store/user'
 import { useCountdown } from '@/composables/useCountdown'
 
 const router = useRouter()
 const userStore = useUserStore()
+const siteStore = useSiteStore()
 const { remaining, start } = useCountdown(60)
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const agreed = ref(false)
 const form = reactive({
   mobile: '',
   code: '',
   password: '',
   confirmPassword: ''
 })
+
+/** 密码强度：长度 ≥6、含大小写字母、含数字与特殊字符逐项加分 */
+const passwordStrength = computed(() => {
+  const password = form.password
+  if (!password) {
+    return 0
+  }
+  let score = 0
+  if (password.length >= 6) {
+    score += 1
+  }
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) {
+    score += 1
+  }
+  if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) {
+    score += 1
+  }
+  return score
+})
+
+const strengthLabel = computed(() => ['', '弱', '中', '强'][passwordStrength.value])
 
 const rules: FormRules = {
   mobile: [
@@ -54,9 +78,18 @@ async function handleSendCode(): Promise<void> {
     return
   }
   await formInstance.validateField('mobile')
-  await sendSmsCode({ mobile: form.mobile, type: 'register' })
-  ElMessage.success('验证码已发送')
+  const result = await sendSmsCode({ mobile: form.mobile, type: 'register' })
   start()
+  if (result.debugCode) {
+    form.code = result.debugCode
+    ElMessage.success(`验证码已发送，开发环境已自动填入：${result.debugCode}`)
+    return
+  }
+  ElMessage.success('验证码已发送')
+}
+
+function showAgreement(name: string): void {
+  ElMessage.info(`${name}页面建设中，敬请期待`)
 }
 
 async function submit(): Promise<void> {
@@ -65,14 +98,18 @@ async function submit(): Promise<void> {
     return
   }
   await formInstance.validate()
+  if (!agreed.value) {
+    ElMessage.warning('请先阅读并同意《用户协议》和《隐私政策》')
+    return
+  }
   loading.value = true
   try {
     await userStore.registerAccount(
       { mobile: form.mobile, code: form.code, password: form.password },
       false
     )
-    ElMessage.success('注册成功，欢迎加入云枢智学')
-    await router.replace('/')
+    ElMessage.success(`注册成功，欢迎加入${siteStore.siteName}`)
+    await router.replace({ name: 'profile' })
   } finally {
     loading.value = false
   }
@@ -101,6 +138,21 @@ async function submit(): Promise<void> {
           placeholder="6~20 位密码"
           autocomplete="new-password"
         />
+        <div
+          v-if="form.password"
+          class="strength-meter"
+          :class="`strength-${passwordStrength}`"
+        >
+          <span class="strength-bars">
+            <i
+              v-for="index in 3"
+              :key="index"
+              class="strength-bar"
+              :class="{ active: index <= passwordStrength }"
+            />
+          </span>
+          <em class="strength-label">{{ strengthLabel }}</em>
+        </div>
       </el-form-item>
       <el-form-item label="确认密码" prop="confirmPassword">
         <el-input
@@ -112,6 +164,12 @@ async function submit(): Promise<void> {
           @keyup.enter="submit"
         />
       </el-form-item>
+      <el-checkbox v-model="agreed" class="agreement">
+        我已阅读并同意
+        <span class="agreement-link" @click.stop="showAgreement('用户协议')">《用户协议》</span>
+        和
+        <span class="agreement-link" @click.stop="showAgreement('隐私政策')">《隐私政策》</span>
+      </el-checkbox>
       <el-button type="primary" class="submit-btn" :loading="loading" @click="submit">注册</el-button>
     </el-form>
 
@@ -135,6 +193,86 @@ async function submit(): Promise<void> {
 
 .code-row .el-input {
   flex: 1;
+}
+
+.strength-meter {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.strength-bars {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  background: #eef0f6;
+  border-radius: 2px;
+  transition: background 0.2s ease;
+}
+
+.strength-1 .strength-bar.active {
+  background: var(--ys-danger);
+}
+
+.strength-2 .strength-bar.active {
+  background: var(--ys-warning);
+}
+
+.strength-3 .strength-bar.active {
+  background: var(--ys-success);
+}
+
+.strength-label {
+  flex: none;
+  width: 16px;
+  font-size: 12px;
+  font-style: normal;
+  text-align: right;
+  color: var(--ys-text-secondary);
+}
+
+.strength-1 .strength-label {
+  color: var(--ys-danger);
+}
+
+.strength-2 .strength-label {
+  color: var(--ys-warning);
+}
+
+.strength-3 .strength-label {
+  color: var(--ys-success);
+}
+
+.agreement {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  height: auto;
+  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: normal;
+}
+
+.agreement :deep(.el-checkbox__label) {
+  color: var(--ys-text-secondary);
+  white-space: normal;
+}
+
+.agreement-link {
+  color: var(--ys-primary);
+  cursor: pointer;
+}
+
+.agreement-link:hover {
+  text-decoration: underline;
 }
 
 .switch-line {

@@ -2,6 +2,7 @@ package com.yunshu.zhixue.modules.study.service.impl;
 
 import com.yunshu.zhixue.modules.study.dto.PracticeStat;
 import com.yunshu.zhixue.modules.study.mapper.PracticeRecordMapper;
+import com.yunshu.zhixue.modules.study.mapper.WrongQuestionMapper;
 import com.yunshu.zhixue.modules.study.service.StudyStatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.Objects;
 public class StudyStatServiceImpl implements StudyStatService {
 
     private final PracticeRecordMapper practiceRecordMapper;
+    private final WrongQuestionMapper wrongQuestionMapper;
 
     @Override
     public List<PracticeStat> statByStudents(Collection<Long> studentIds) {
@@ -26,5 +28,10 @@ public class StudyStatServiceImpl implements StudyStatService {
             return List.of();
         }
         return practiceRecordMapper.statByStudents(ids);
+    }
+
+    @Override
+    public long countWrongQuestions(Long studentId) {
+        return studentId == null ? 0L : wrongQuestionMapper.countByStudentId(studentId);
     }
 }

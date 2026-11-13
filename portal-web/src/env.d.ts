@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_API_TARGET?: string
   readonly VITE_MINIO_TARGET?: string
   readonly VITE_MINIO_BUCKET?: string
+  /** 管理后台入口地址（页脚常驻入口） */
+  readonly VITE_ADMIN_URL?: string
 }
 
 interface ImportMeta {

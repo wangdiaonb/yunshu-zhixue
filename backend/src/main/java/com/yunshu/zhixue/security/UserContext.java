@@ -39,4 +39,13 @@ public final class UserContext {
         }
         return loginUser.id();
     }
+
+    /** 学员端当前学员主键；非学员端令牌抛 403。 */
+    public static Long requireStudentId() {
+        LoginUser loginUser = getRequired();
+        if (loginUser.audience() != TokenAudience.PORTAL) {
+            throw BizException.of(ErrorCode.FORBIDDEN);
+        }
+        return loginUser.id();
+    }
 }
